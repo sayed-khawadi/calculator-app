@@ -74,6 +74,7 @@ namespace CalculatorApp
             }
 
             _selectedOperator = currentOperator;
+            ExpressionText.Text = $"{FormatNumber(_firstNumber)} {_selectedOperator}";
             _isNewInput = true;
         }
 
@@ -96,6 +97,7 @@ namespace CalculatorApp
                 return;
             }
 
+            ExpressionText.Text = $"{FormatNumber(_firstNumber)} {_selectedOperator} {FormatNumber(secondNumber)} =";
             DisplayText.Text = FormatNumber(result.Value);
 
             _firstNumber = result.Value;
@@ -159,11 +161,13 @@ namespace CalculatorApp
             _firstNumber = 0;
             _selectedOperator = "";
             _isNewInput = false;
+            ExpressionText.Text = "";
             DisplayText.Text = "0";
         }
 
         private void ShowError()
         {
+            ExpressionText.Text = "";
             DisplayText.Text = "Error";
             _firstNumber = 0;
             _selectedOperator = "";
