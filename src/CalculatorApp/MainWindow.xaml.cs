@@ -2,6 +2,7 @@
 using System.Globalization;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 
 namespace CalculatorApp
 {
@@ -13,6 +14,118 @@ namespace CalculatorApp
         public MainWindow()
         {
             InitializeComponent();
+        }
+
+        private void Window_PreviewKeyDown(object sender, KeyEventArgs e)
+        {
+            Key key = e.Key == Key.System ? e.SystemKey : e.Key;
+            bool isShiftPressed = Keyboard.Modifiers.HasFlag(ModifierKeys.Shift);
+
+            if (DisplayText.Text == "Error" && key != Key.Escape && key != Key.Delete)
+            {
+                ResetCalculator();
+            }
+
+            if (isShiftPressed)
+            {
+                if (key == Key.D5)
+                {
+                    AppendPercentFromKeyboard();
+                    e.Handled = true;
+                    return;
+                }
+
+                if (key == Key.D7)
+                {
+                    AppendOperatorFromKeyboard("÷");
+                    e.Handled = true;
+                    return;
+                }
+
+                if (key == Key.D8)
+                {
+                    AppendParenthesisFromKeyboard("(");
+                    e.Handled = true;
+                    return;
+                }
+
+                if (key == Key.D9)
+                {
+                    AppendParenthesisFromKeyboard(")");
+                    e.Handled = true;
+                    return;
+                }
+
+                if (key == Key.OemPlus)
+                {
+                    AppendOperatorFromKeyboard("×");
+                    e.Handled = true;
+                    return;
+                }
+            }
+
+            if (!isShiftPressed && key >= Key.D0 && key <= Key.D9)
+            {
+                AppendDigitFromKeyboard((key - Key.D0).ToString());
+                e.Handled = true;
+                return;
+            }
+
+            if (key >= Key.NumPad0 && key <= Key.NumPad9)
+            {
+                AppendDigitFromKeyboard((key - Key.NumPad0).ToString());
+                e.Handled = true;
+                return;
+            }
+
+            switch (key)
+            {
+                case Key.Add:
+                case Key.OemPlus:
+                    AppendOperatorFromKeyboard("+");
+                    e.Handled = true;
+                    break;
+
+                case Key.Subtract:
+                case Key.OemMinus:
+                    AppendOperatorFromKeyboard("-");
+                    e.Handled = true;
+                    break;
+
+                case Key.Multiply:
+                    AppendOperatorFromKeyboard("×");
+                    e.Handled = true;
+                    break;
+
+                case Key.Divide:
+                case Key.Oem2:
+                    AppendOperatorFromKeyboard("÷");
+                    e.Handled = true;
+                    break;
+
+                case Key.Decimal:
+                case Key.OemPeriod:
+                case Key.OemComma:
+                    AppendDigitFromKeyboard(".");
+                    e.Handled = true;
+                    break;
+
+                case Key.Return:
+                    EqualsButton_Click(sender, e);
+                    e.Handled = true;
+                    break;
+
+                case Key.Back:
+                    BackspaceButton_Click(sender, e);
+                    e.Handled = true;
+                    break;
+
+                case Key.Escape:
+                case Key.Delete:
+                    ResetCalculator();
+                    e.Handled = true;
+                    break;
+            }
         }
 
         private void NumberButton_Click(object sender, RoutedEventArgs e)
@@ -72,14 +185,7 @@ namespace CalculatorApp
                 _justCalculated = false;
             }
 
-            string trimmedExpression = _expression.TrimEnd();
-            char lastChar = GetLastNonSpaceChar();
-
-            if (char.IsDigit(lastChar) || lastChar == ')')
-            {
-                _expression = trimmedExpression + "%";
-            }
-
+            AppendPercent();
             UpdateDisplay();
         }
 
@@ -183,6 +289,81 @@ namespace CalculatorApp
             UpdateDisplay();
         }
 
+        private void AppendDigitFromKeyboard(string value)
+        {
+            if (_justCalculated || DisplayText.Text == "Error")
+            {
+                _expression = "";
+                ExpressionText.Text = "";
+                _justCalculated = false;
+            }
+
+            if (value == ".")
+            {
+                AppendDecimalPoint();
+            }
+            else
+            {
+                AppendDigit(value);
+            }
+
+            UpdateDisplay();
+        }
+
+        private void AppendOperatorFromKeyboard(string operation)
+        {
+            if (DisplayText.Text == "Error")
+                return;
+
+            if (_justCalculated)
+            {
+                ExpressionText.Text = "";
+                _justCalculated = false;
+            }
+
+            AppendOperator(operation);
+            UpdateDisplay();
+        }
+
+        private void AppendPercentFromKeyboard()
+        {
+            if (DisplayText.Text == "Error")
+                return;
+
+            if (_justCalculated)
+            {
+                ExpressionText.Text = "";
+                _justCalculated = false;
+            }
+
+            AppendPercent();
+            UpdateDisplay();
+        }
+
+        private void AppendParenthesisFromKeyboard(string parenthesis)
+        {
+            if (DisplayText.Text == "Error")
+                return;
+
+            if (_justCalculated)
+            {
+                _expression = "";
+                ExpressionText.Text = "";
+                _justCalculated = false;
+            }
+
+            if (parenthesis == "(")
+            {
+                AppendOpeningParenthesis();
+            }
+            else if (parenthesis == ")")
+            {
+                AppendClosingParenthesis();
+            }
+
+            UpdateDisplay();
+        }
+
         private void AppendDigit(string digit)
         {
             char lastChar = GetLastNonSpaceChar();
@@ -263,6 +444,17 @@ namespace CalculatorApp
                 return;
 
             _expression = trimmedExpression + $" {operation} ";
+        }
+
+        private void AppendPercent()
+        {
+            string trimmedExpression = _expression.TrimEnd();
+            char lastChar = GetLastNonSpaceChar();
+
+            if (char.IsDigit(lastChar) || lastChar == ')')
+            {
+                _expression = trimmedExpression + "%";
+            }
         }
 
         private void AppendOpeningParenthesis()
