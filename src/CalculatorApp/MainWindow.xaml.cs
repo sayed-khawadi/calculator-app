@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Windows;
 using System.Windows.Controls;
@@ -10,6 +11,7 @@ namespace CalculatorApp
     {
         private string _expression = "";
         private bool _justCalculated = false;
+        private readonly List<string> _historyItems = new();
 
         public MainWindow()
         {
@@ -220,7 +222,7 @@ namespace CalculatorApp
 
         private void EqualsButton_Click(object sender, RoutedEventArgs e)
         {
-            if (string.IsNullOrWhiteSpace(_expression))
+            if (string.IsNullOrWhiteSpace(_expression) || _justCalculated)
                 return;
 
             try
@@ -241,10 +243,14 @@ namespace CalculatorApp
                     return;
                 }
 
-                ExpressionText.Text = expressionToCalculate + " =";
-                DisplayText.Text = FormatNumber(result);
+                string formattedResult = FormatNumber(result);
 
-                _expression = FormatNumber(result);
+                ExpressionText.Text = expressionToCalculate + " =";
+                DisplayText.Text = formattedResult;
+
+                AddHistoryItem($"{expressionToCalculate} = {formattedResult}");
+
+                _expression = formattedResult;
                 _justCalculated = true;
             }
             catch
@@ -256,6 +262,12 @@ namespace CalculatorApp
         private void ClearButton_Click(object sender, RoutedEventArgs e)
         {
             ResetCalculator();
+        }
+
+        private void ClearHistoryButton_Click(object sender, RoutedEventArgs e)
+        {
+            _historyItems.Clear();
+            RefreshHistoryList();
         }
 
         private void BackspaceButton_Click(object sender, RoutedEventArgs e)
@@ -563,6 +575,18 @@ namespace CalculatorApp
                    character == '-' ||
                    character == '×' ||
                    character == '÷';
+        }
+
+        private void AddHistoryItem(string historyItem)
+        {
+            _historyItems.Insert(0, historyItem);
+            RefreshHistoryList();
+        }
+
+        private void RefreshHistoryList()
+        {
+            HistoryList.ItemsSource = null;
+            HistoryList.ItemsSource = _historyItems;
         }
 
         private void UpdateDisplay()

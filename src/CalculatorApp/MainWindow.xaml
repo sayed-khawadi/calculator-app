@@ -3,9 +3,9 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Calculator App"
         Height="690"
-        Width="480"
+        Width="820"
         MinHeight="650"
-        MinWidth="430"
+        MinWidth="760"
         WindowStartupLocation="CenterScreen"
         PreviewKeyDown="Window_PreviewKeyDown"
         Background="#111214">
@@ -53,97 +53,170 @@
             <Setter Property="Foreground" Value="#FF7777"/>
         </Style>
 
+        <Style x:Key="HistoryButton" TargetType="Button">
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Foreground" Value="#111214"/>
+            <Setter Property="Background" Value="#F5C542"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Height" Value="38"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Focusable" Value="False"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}"
+                                CornerRadius="10">
+                            <ContentPresenter HorizontalAlignment="Center"
+                                              VerticalAlignment="Center"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
     </Window.Resources>
 
     <Grid Margin="22">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="175"/>
-            <RowDefinition Height="*"/>
-        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="480"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
 
-        <!-- Display -->
-        <Border Grid.Row="0"
-                Background="#22242A"
+        <!-- Calculator area -->
+        <Grid Grid.Column="0" Margin="0,0,18,0">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="175"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+            <!-- Display -->
+            <Border Grid.Row="0"
+                    Background="#22242A"
+                    CornerRadius="22"
+                    Padding="22"
+                    Margin="0,0,0,22">
+
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="45"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <TextBlock x:Name="ExpressionText"
+                               Grid.Row="0"
+                               Text=""
+                               Foreground="#A9ADB8"
+                               FontSize="21"
+                               HorizontalAlignment="Right"
+                               VerticalAlignment="Center"
+                               TextTrimming="CharacterEllipsis"/>
+
+                    <TextBlock x:Name="DisplayText"
+                               Grid.Row="1"
+                               Text="0"
+                               Foreground="White"
+                               FontSize="46"
+                               FontWeight="Bold"
+                               HorizontalAlignment="Right"
+                               VerticalAlignment="Center"
+                               TextTrimming="CharacterEllipsis"/>
+                </Grid>
+            </Border>
+
+            <!-- Buttons -->
+            <Grid Grid.Row="1">
+                <Grid.RowDefinitions>
+                    <RowDefinition/>
+                    <RowDefinition/>
+                    <RowDefinition/>
+                    <RowDefinition/>
+                    <RowDefinition/>
+                </Grid.RowDefinitions>
+
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition/>
+                    <ColumnDefinition/>
+                    <ColumnDefinition/>
+                    <ColumnDefinition/>
+                    <ColumnDefinition/>
+                </Grid.ColumnDefinitions>
+
+                <Button Grid.Row="0" Grid.Column="0" Content="C" Style="{StaticResource ClearButton}" Click="ClearButton_Click"/>
+                <Button Grid.Row="0" Grid.Column="1" Content="←" Style="{StaticResource OperatorButton}" Click="BackspaceButton_Click"/>
+                <Button Grid.Row="0" Grid.Column="2" Content="(" Style="{StaticResource OperatorButton}" Click="ParenthesisButton_Click"/>
+                <Button Grid.Row="0" Grid.Column="3" Content=")" Style="{StaticResource OperatorButton}" Click="ParenthesisButton_Click"/>
+                <Button Grid.Row="0" Grid.Column="4" Content="%" Style="{StaticResource OperatorButton}" Click="PercentButton_Click"/>
+
+                <Button Grid.Row="1" Grid.Column="0" Content="7" Style="{StaticResource CalculatorButton}" Click="NumberButton_Click"/>
+                <Button Grid.Row="1" Grid.Column="1" Content="8" Style="{StaticResource CalculatorButton}" Click="NumberButton_Click"/>
+                <Button Grid.Row="1" Grid.Column="2" Content="9" Style="{StaticResource CalculatorButton}" Click="NumberButton_Click"/>
+                <Button Grid.Row="1" Grid.Column="3" Content="÷" Style="{StaticResource OperatorButton}" Click="OperatorButton_Click"/>
+                <Button Grid.Row="1" Grid.Column="4" Content="×" Style="{StaticResource OperatorButton}" Click="OperatorButton_Click"/>
+
+                <Button Grid.Row="2" Grid.Column="0" Content="4" Style="{StaticResource CalculatorButton}" Click="NumberButton_Click"/>
+                <Button Grid.Row="2" Grid.Column="1" Content="5" Style="{StaticResource CalculatorButton}" Click="NumberButton_Click"/>
+                <Button Grid.Row="2" Grid.Column="2" Content="6" Style="{StaticResource CalculatorButton}" Click="NumberButton_Click"/>
+                <Button Grid.Row="2" Grid.Column="3" Content="-" Style="{StaticResource OperatorButton}" Click="OperatorButton_Click"/>
+                <Button Grid.Row="2" Grid.Column="4" Content="+" Style="{StaticResource OperatorButton}" Click="OperatorButton_Click"/>
+
+                <Button Grid.Row="3" Grid.Column="0" Content="1" Style="{StaticResource CalculatorButton}" Click="NumberButton_Click"/>
+                <Button Grid.Row="3" Grid.Column="1" Content="2" Style="{StaticResource CalculatorButton}" Click="NumberButton_Click"/>
+                <Button Grid.Row="3" Grid.Column="2" Content="3" Style="{StaticResource CalculatorButton}" Click="NumberButton_Click"/>
+
+                <Button Grid.Row="3" Grid.Column="3"
+                        Grid.RowSpan="2"
+                        Grid.ColumnSpan="2"
+                        Content="="
+                        Style="{StaticResource EqualsButton}"
+                        Click="EqualsButton_Click"/>
+
+                <Button Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="2" Content="0" Style="{StaticResource CalculatorButton}" Click="NumberButton_Click"/>
+                <Button Grid.Row="4" Grid.Column="2" Content="." Style="{StaticResource CalculatorButton}" Click="NumberButton_Click"/>
+            </Grid>
+        </Grid>
+
+        <!-- History area -->
+        <Border Grid.Column="1"
+                Background="#1B1D22"
                 CornerRadius="22"
-                Padding="22"
-                Margin="0,0,0,22">
+                Padding="18">
 
             <Grid>
                 <Grid.RowDefinitions>
-                    <RowDefinition Height="45"/>
+                    <RowDefinition Height="Auto"/>
                     <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
 
-                <TextBlock x:Name="ExpressionText"
-                           Grid.Row="0"
-                           Text=""
-                           Foreground="#A9ADB8"
-                           FontSize="21"
-                           HorizontalAlignment="Right"
-                           VerticalAlignment="Center"
-                           TextTrimming="CharacterEllipsis"/>
-
-                <TextBlock x:Name="DisplayText"
-                           Grid.Row="1"
-                           Text="0"
+                <TextBlock Grid.Row="0"
+                           Text="History"
                            Foreground="White"
-                           FontSize="46"
+                           FontSize="26"
                            FontWeight="Bold"
-                           HorizontalAlignment="Right"
-                           VerticalAlignment="Center"
-                           TextTrimming="CharacterEllipsis"/>
+                           Margin="0,0,0,16"/>
+
+                <ListBox x:Name="HistoryList"
+                         Grid.Row="1"
+                         Background="Transparent"
+                         BorderThickness="0"
+                         Foreground="#D7DAE2"
+                         FontSize="16"
+                         Margin="0,0,0,16">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding}"
+                                       TextWrapping="Wrap"
+                                       Margin="0,0,0,10"/>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+
+                <Button Grid.Row="2"
+                        Content="Clear History"
+                        Style="{StaticResource HistoryButton}"
+                        Click="ClearHistoryButton_Click"/>
             </Grid>
         </Border>
-
-        <!-- Buttons -->
-        <Grid Grid.Row="1">
-            <Grid.RowDefinitions>
-                <RowDefinition/>
-                <RowDefinition/>
-                <RowDefinition/>
-                <RowDefinition/>
-                <RowDefinition/>
-            </Grid.RowDefinitions>
-
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition/>
-                <ColumnDefinition/>
-                <ColumnDefinition/>
-                <ColumnDefinition/>
-                <ColumnDefinition/>
-            </Grid.ColumnDefinitions>
-
-            <Button Grid.Row="0" Grid.Column="0" Content="C" Style="{StaticResource ClearButton}" Click="ClearButton_Click"/>
-            <Button Grid.Row="0" Grid.Column="1" Content="←" Style="{StaticResource OperatorButton}" Click="BackspaceButton_Click"/>
-            <Button Grid.Row="0" Grid.Column="2" Content="(" Style="{StaticResource OperatorButton}" Click="ParenthesisButton_Click"/>
-            <Button Grid.Row="0" Grid.Column="3" Content=")" Style="{StaticResource OperatorButton}" Click="ParenthesisButton_Click"/>
-            <Button Grid.Row="0" Grid.Column="4" Content="%" Style="{StaticResource OperatorButton}" Click="PercentButton_Click"/>
-
-            <Button Grid.Row="1" Grid.Column="0" Content="7" Style="{StaticResource CalculatorButton}" Click="NumberButton_Click"/>
-            <Button Grid.Row="1" Grid.Column="1" Content="8" Style="{StaticResource CalculatorButton}" Click="NumberButton_Click"/>
-            <Button Grid.Row="1" Grid.Column="2" Content="9" Style="{StaticResource CalculatorButton}" Click="NumberButton_Click"/>
-            <Button Grid.Row="1" Grid.Column="3" Content="÷" Style="{StaticResource OperatorButton}" Click="OperatorButton_Click"/>
-            <Button Grid.Row="1" Grid.Column="4" Content="×" Style="{StaticResource OperatorButton}" Click="OperatorButton_Click"/>
-
-            <Button Grid.Row="2" Grid.Column="0" Content="4" Style="{StaticResource CalculatorButton}" Click="NumberButton_Click"/>
-            <Button Grid.Row="2" Grid.Column="1" Content="5" Style="{StaticResource CalculatorButton}" Click="NumberButton_Click"/>
-            <Button Grid.Row="2" Grid.Column="2" Content="6" Style="{StaticResource CalculatorButton}" Click="NumberButton_Click"/>
-            <Button Grid.Row="2" Grid.Column="3" Content="-" Style="{StaticResource OperatorButton}" Click="OperatorButton_Click"/>
-            <Button Grid.Row="2" Grid.Column="4" Content="+" Style="{StaticResource OperatorButton}" Click="OperatorButton_Click"/>
-
-            <Button Grid.Row="3" Grid.Column="0" Content="1" Style="{StaticResource CalculatorButton}" Click="NumberButton_Click"/>
-            <Button Grid.Row="3" Grid.Column="1" Content="2" Style="{StaticResource CalculatorButton}" Click="NumberButton_Click"/>
-            <Button Grid.Row="3" Grid.Column="2" Content="3" Style="{StaticResource CalculatorButton}" Click="NumberButton_Click"/>
-
-            <Button Grid.Row="3" Grid.Column="3"
-                    Grid.RowSpan="2"
-                    Grid.ColumnSpan="2"
-                    Content="="
-                    Style="{StaticResource EqualsButton}"
-                    Click="EqualsButton_Click"/>
-
-            <Button Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="2" Content="0" Style="{StaticResource CalculatorButton}" Click="NumberButton_Click"/>
-            <Button Grid.Row="4" Grid.Column="2" Content="." Style="{StaticResource CalculatorButton}" Click="NumberButton_Click"/>
-        </Grid>
     </Grid>
 </Window>
