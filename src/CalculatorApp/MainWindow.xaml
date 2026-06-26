@@ -10,102 +10,18 @@
         PreviewKeyDown="Window_PreviewKeyDown"
         Background="{DynamicResource WindowBackgroundBrush}">
 
-    <Window.Resources>
-
-        <!-- Theme brushes -->
-        <SolidColorBrush x:Key="WindowBackgroundBrush" Color="#111214"/>
-        <SolidColorBrush x:Key="PanelBackgroundBrush" Color="#1B1D22"/>
-        <SolidColorBrush x:Key="DisplayBackgroundBrush" Color="#22242A"/>
-        <SolidColorBrush x:Key="NormalButtonBackgroundBrush" Color="#2D2F34"/>
-        <SolidColorBrush x:Key="OperatorButtonBackgroundBrush" Color="#3B3F48"/>
-        <SolidColorBrush x:Key="ClearButtonBackgroundBrush" Color="#4A2D2D"/>
-        <SolidColorBrush x:Key="PrimaryTextBrush" Color="#FFFFFF"/>
-        <SolidColorBrush x:Key="SecondaryTextBrush" Color="#A9ADB8"/>
-        <SolidColorBrush x:Key="AccentBrush" Color="#F5C542"/>
-        <SolidColorBrush x:Key="DangerBrush" Color="#FF7777"/>
-        <SolidColorBrush x:Key="ButtonBorderBrush" Color="#3A3D44"/>
-
-        <Style x:Key="CalculatorButton" TargetType="Button">
-            <Setter Property="FontSize" Value="24"/>
-            <Setter Property="FontWeight" Value="SemiBold"/>
-            <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}"/>
-            <Setter Property="Background" Value="{DynamicResource NormalButtonBackgroundBrush}"/>
-            <Setter Property="BorderBrush" Value="{DynamicResource ButtonBorderBrush}"/>
-            <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="Margin" Value="6"/>
-            <Setter Property="Cursor" Value="Hand"/>
-            <Setter Property="Focusable" Value="False"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="Button">
-                        <Border Background="{TemplateBinding Background}"
-                                BorderBrush="{TemplateBinding BorderBrush}"
-                                BorderThickness="{TemplateBinding BorderThickness}"
-                                CornerRadius="14">
-                            <ContentPresenter HorizontalAlignment="Center"
-                                              VerticalAlignment="Center"/>
-                        </Border>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-
-        <Style x:Key="OperatorButton" TargetType="Button" BasedOn="{StaticResource CalculatorButton}">
-            <Setter Property="Background" Value="{DynamicResource OperatorButtonBackgroundBrush}"/>
-            <Setter Property="Foreground" Value="{DynamicResource AccentBrush}"/>
-        </Style>
-
-        <Style x:Key="EqualsButton" TargetType="Button" BasedOn="{StaticResource CalculatorButton}">
-            <Setter Property="Background" Value="{DynamicResource AccentBrush}"/>
-            <Setter Property="Foreground" Value="#111214"/>
-            <Setter Property="FontSize" Value="30"/>
-        </Style>
-
-        <Style x:Key="ClearButton" TargetType="Button" BasedOn="{StaticResource CalculatorButton}">
-            <Setter Property="Background" Value="{DynamicResource ClearButtonBackgroundBrush}"/>
-            <Setter Property="Foreground" Value="{DynamicResource DangerBrush}"/>
-        </Style>
-
-        <Style x:Key="SmallActionButton" TargetType="Button">
-            <Setter Property="FontSize" Value="13"/>
-            <Setter Property="FontWeight" Value="SemiBold"/>
-            <Setter Property="Foreground" Value="#111214"/>
-            <Setter Property="Background" Value="{DynamicResource AccentBrush}"/>
-            <Setter Property="BorderThickness" Value="0"/>
-            <Setter Property="Height" Value="42"/>
-            <Setter Property="MinWidth" Value="130"/>
-            <Setter Property="Padding" Value="16,0"/>
-            <Setter Property="Cursor" Value="Hand"/>
-            <Setter Property="Focusable" Value="False"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="Button">
-                        <Border Background="{TemplateBinding Background}"
-                                CornerRadius="12">
-                            <ContentPresenter HorizontalAlignment="Center"
-                                              VerticalAlignment="Center"/>
-                        </Border>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-
-    </Window.Resources>
-
     <Grid Margin="22">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="480"/>
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
 
-        <!-- Calculator area -->
         <Grid Grid.Column="0" Margin="0,0,18,0">
             <Grid.RowDefinitions>
                 <RowDefinition Height="175"/>
                 <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
 
-            <!-- Display -->
             <Border Grid.Row="0"
                     Background="{DynamicResource DisplayBackgroundBrush}"
                     CornerRadius="22"
@@ -139,7 +55,6 @@
                 </Grid>
             </Border>
 
-            <!-- Buttons -->
             <Grid Grid.Row="1">
                 <Grid.RowDefinitions>
                     <RowDefinition/>
@@ -191,7 +106,6 @@
             </Grid>
         </Grid>
 
-        <!-- History area -->
         <Border Grid.Column="1"
                 Background="{DynamicResource PanelBackgroundBrush}"
                 CornerRadius="22"
