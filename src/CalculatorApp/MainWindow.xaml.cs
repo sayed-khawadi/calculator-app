@@ -1,4 +1,5 @@
-﻿using System.Globalization;
+﻿using System;
+using System.Globalization;
 using System.Windows;
 using System.Windows.Controls;
 
@@ -6,9 +7,8 @@ namespace CalculatorApp
 {
     public partial class MainWindow : Window
     {
-        private double _firstNumber = 0;
-        private string _selectedOperator = "";
-        private bool _isNewInput = false;
+        private string _expression = "";
+        private bool _justCalculated = false;
 
         public MainWindow()
         {
@@ -22,24 +22,23 @@ namespace CalculatorApp
 
             string value = button.Content.ToString() ?? "";
 
-            if (DisplayText.Text == "Error" || _isNewInput)
+            if (_justCalculated || DisplayText.Text == "Error")
             {
-                DisplayText.Text = value == "." ? "0." : value;
-                _isNewInput = false;
-                return;
+                _expression = "";
+                ExpressionText.Text = "";
+                _justCalculated = false;
             }
 
-            if (value == "." && DisplayText.Text.Contains("."))
-                return;
-
-            if (DisplayText.Text == "0" && value != ".")
+            if (value == ".")
             {
-                DisplayText.Text = value;
+                AppendDecimalPoint();
             }
             else
             {
-                DisplayText.Text += value;
+                AppendDigit(value);
             }
+
+            UpdateDisplay();
         }
 
         private void OperatorButton_Click(object sender, RoutedEventArgs e)
@@ -47,62 +46,105 @@ namespace CalculatorApp
             if (sender is not Button button)
                 return;
 
-            string currentOperator = button.Content.ToString() ?? "";
+            string operation = button.Content.ToString() ?? "";
 
-            if (!TryGetDisplayNumber(out double currentNumber))
-            {
-                ResetCalculator();
+            if (DisplayText.Text == "Error")
                 return;
+
+            if (_justCalculated)
+            {
+                ExpressionText.Text = "";
+                _justCalculated = false;
             }
 
-            if (!string.IsNullOrEmpty(_selectedOperator) && !_isNewInput)
-            {
-                double? result = Calculate(_firstNumber, currentNumber, _selectedOperator);
+            AppendOperator(operation);
+            UpdateDisplay();
+        }
 
-                if (result == null)
+        private void PercentButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (DisplayText.Text == "Error")
+                return;
+
+            if (_justCalculated)
+            {
+                ExpressionText.Text = "";
+                _justCalculated = false;
+            }
+
+            string trimmedExpression = _expression.TrimEnd();
+            char lastChar = GetLastNonSpaceChar();
+
+            if (char.IsDigit(lastChar) || lastChar == ')')
+            {
+                _expression = trimmedExpression + "%";
+            }
+
+            UpdateDisplay();
+        }
+
+        private void ParenthesisButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is not Button button)
+                return;
+
+            string parenthesis = button.Content.ToString() ?? "";
+
+            if (DisplayText.Text == "Error")
+                return;
+
+            if (_justCalculated)
+            {
+                _expression = "";
+                ExpressionText.Text = "";
+                _justCalculated = false;
+            }
+
+            if (parenthesis == "(")
+            {
+                AppendOpeningParenthesis();
+            }
+            else if (parenthesis == ")")
+            {
+                AppendClosingParenthesis();
+            }
+
+            UpdateDisplay();
+        }
+
+        private void EqualsButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (string.IsNullOrWhiteSpace(_expression))
+                return;
+
+            try
+            {
+                string expressionToCalculate = _expression.Trim();
+
+                if (EndsWithInvalidCharacter(expressionToCalculate))
                 {
                     ShowError();
                     return;
                 }
 
-                _firstNumber = result.Value;
-                DisplayText.Text = FormatNumber(_firstNumber);
+                double result = ExpressionParser.Evaluate(expressionToCalculate);
+
+                if (double.IsNaN(result) || double.IsInfinity(result))
+                {
+                    ShowError();
+                    return;
+                }
+
+                ExpressionText.Text = expressionToCalculate + " =";
+                DisplayText.Text = FormatNumber(result);
+
+                _expression = FormatNumber(result);
+                _justCalculated = true;
             }
-            else
-            {
-                _firstNumber = currentNumber;
-            }
-
-            _selectedOperator = currentOperator;
-            ExpressionText.Text = $"{FormatNumber(_firstNumber)} {_selectedOperator}";
-            _isNewInput = true;
-        }
-
-        private void EqualsButton_Click(object sender, RoutedEventArgs e)
-        {
-            if (string.IsNullOrEmpty(_selectedOperator))
-                return;
-
-            if (!TryGetDisplayNumber(out double secondNumber))
-            {
-                ResetCalculator();
-                return;
-            }
-
-            double? result = Calculate(_firstNumber, secondNumber, _selectedOperator);
-
-            if (result == null)
+            catch
             {
                 ShowError();
-                return;
             }
-
-            ExpressionText.Text = $"{FormatNumber(_firstNumber)} {_selectedOperator} {FormatNumber(secondNumber)} =";
-            DisplayText.Text = FormatNumber(result.Value);
-
-            _firstNumber = result.Value;
-            _selectedOperator = "";
-            _isNewInput = true;
         }
 
         private void ClearButton_Click(object sender, RoutedEventArgs e)
@@ -112,43 +154,244 @@ namespace CalculatorApp
 
         private void BackspaceButton_Click(object sender, RoutedEventArgs e)
         {
-            if (_isNewInput || DisplayText.Text == "Error")
+            if (_justCalculated || DisplayText.Text == "Error")
             {
-                DisplayText.Text = "0";
-                _isNewInput = false;
+                ResetCalculator();
                 return;
             }
 
-            if (DisplayText.Text.Length <= 1)
+            if (string.IsNullOrEmpty(_expression))
             {
-                DisplayText.Text = "0";
+                UpdateDisplay();
                 return;
             }
 
-            DisplayText.Text = DisplayText.Text[..^1];
-        }
-
-        private double? Calculate(double firstNumber, double secondNumber, string operation)
-        {
-            return operation switch
+            if (_expression.EndsWith(" "))
             {
-                "+" => firstNumber + secondNumber,
-                "-" => firstNumber - secondNumber,
-                "×" => firstNumber * secondNumber,
-                "÷" => secondNumber == 0 ? null : firstNumber / secondNumber,
-                "%" => secondNumber == 0 ? null : firstNumber % secondNumber,
-                _ => null
-            };
+                string trimmed = _expression.TrimEnd();
+
+                if (trimmed.Length > 0)
+                    trimmed = trimmed[..^1].TrimEnd();
+
+                _expression = trimmed;
+            }
+            else
+            {
+                _expression = _expression[..^1];
+            }
+
+            UpdateDisplay();
         }
 
-        private bool TryGetDisplayNumber(out double number)
+        private void AppendDigit(string digit)
         {
-            return double.TryParse(
-                DisplayText.Text,
-                NumberStyles.Float,
-                CultureInfo.InvariantCulture,
-                out number
-            );
+            char lastChar = GetLastNonSpaceChar();
+
+            if (lastChar == ')' || lastChar == '%')
+            {
+                _expression += " × " + digit;
+                return;
+            }
+
+            if (CurrentNumberIsZero())
+            {
+                _expression = _expression[..^1] + digit;
+            }
+            else
+            {
+                _expression += digit;
+            }
+        }
+
+        private void AppendDecimalPoint()
+        {
+            if (CurrentNumberContainsDecimalPoint())
+                return;
+
+            char lastChar = GetLastNonSpaceChar();
+
+            if (string.IsNullOrEmpty(_expression) || IsBinaryOperator(lastChar) || lastChar == '(')
+            {
+                _expression += "0.";
+            }
+            else if (char.IsDigit(lastChar))
+            {
+                _expression += ".";
+            }
+            else if (lastChar == ')' || lastChar == '%')
+            {
+                _expression += " × 0.";
+            }
+        }
+
+        private void AppendOperator(string operation)
+        {
+            if (string.IsNullOrWhiteSpace(_expression))
+            {
+                if (operation == "-")
+                    _expression = "-";
+
+                return;
+            }
+
+            string trimmedExpression = _expression.TrimEnd();
+            char lastChar = trimmedExpression[^1];
+
+            if (lastChar == '(')
+            {
+                if (operation == "-")
+                    _expression = trimmedExpression + "-";
+
+                return;
+            }
+
+            if (IsBinaryOperator(lastChar))
+            {
+                if (operation == "-" && lastChar != '-')
+                {
+                    _expression = trimmedExpression + " -";
+                }
+                else
+                {
+                    _expression = trimmedExpression[..^1].TrimEnd() + $" {operation} ";
+                }
+
+                return;
+            }
+
+            if (lastChar == '.')
+                return;
+
+            _expression = trimmedExpression + $" {operation} ";
+        }
+
+        private void AppendOpeningParenthesis()
+        {
+            char lastChar = GetLastNonSpaceChar();
+
+            if (char.IsDigit(lastChar) || lastChar == ')' || lastChar == '%')
+            {
+                _expression += " × ";
+            }
+
+            _expression += "(";
+        }
+
+        private void AppendClosingParenthesis()
+        {
+            if (!CanCloseParenthesis())
+                return;
+
+            _expression += ")";
+        }
+
+        private bool CanCloseParenthesis()
+        {
+            int openCount = 0;
+            int closeCount = 0;
+
+            foreach (char character in _expression)
+            {
+                if (character == '(')
+                    openCount++;
+
+                if (character == ')')
+                    closeCount++;
+            }
+
+            if (openCount <= closeCount)
+                return false;
+
+            char lastChar = GetLastNonSpaceChar();
+
+            return char.IsDigit(lastChar) || lastChar == ')' || lastChar == '%';
+        }
+
+        private bool CurrentNumberContainsDecimalPoint()
+        {
+            int startIndex = FindCurrentNumberStartIndex();
+
+            for (int i = startIndex; i < _expression.Length; i++)
+            {
+                if (_expression[i] == '.')
+                    return true;
+            }
+
+            return false;
+        }
+
+        private bool CurrentNumberIsZero()
+        {
+            int startIndex = FindCurrentNumberStartIndex();
+
+            if (startIndex >= _expression.Length)
+                return false;
+
+            string currentNumber = _expression[startIndex..];
+
+            return currentNumber == "0";
+        }
+
+        private int FindCurrentNumberStartIndex()
+        {
+            int index = _expression.Length - 1;
+
+            while (index >= 0 && (char.IsDigit(_expression[index]) || _expression[index] == '.'))
+            {
+                index--;
+            }
+
+            return index + 1;
+        }
+
+        private bool EndsWithInvalidCharacter(string expression)
+        {
+            if (string.IsNullOrWhiteSpace(expression))
+                return true;
+
+            char lastChar = expression[^1];
+
+            return IsBinaryOperator(lastChar) || lastChar == '(' || lastChar == '.';
+        }
+
+        private char GetLastNonSpaceChar()
+        {
+            for (int i = _expression.Length - 1; i >= 0; i--)
+            {
+                if (!char.IsWhiteSpace(_expression[i]))
+                    return _expression[i];
+            }
+
+            return '\0';
+        }
+
+        private bool IsBinaryOperator(char character)
+        {
+            return character == '+' ||
+                   character == '-' ||
+                   character == '×' ||
+                   character == '÷';
+        }
+
+        private void UpdateDisplay()
+        {
+            DisplayText.Text = string.IsNullOrWhiteSpace(_expression) ? "0" : _expression;
+        }
+
+        private void ResetCalculator()
+        {
+            _expression = "";
+            _justCalculated = false;
+            ExpressionText.Text = "";
+            DisplayText.Text = "0";
+        }
+
+        private void ShowError()
+        {
+            _expression = "";
+            _justCalculated = false;
+            ExpressionText.Text = "";
+            DisplayText.Text = "Error";
         }
 
         private string FormatNumber(double number)
@@ -156,22 +399,245 @@ namespace CalculatorApp
             return number.ToString("G15", CultureInfo.InvariantCulture);
         }
 
-        private void ResetCalculator()
+        private class ExpressionParser
         {
-            _firstNumber = 0;
-            _selectedOperator = "";
-            _isNewInput = false;
-            ExpressionText.Text = "";
-            DisplayText.Text = "0";
-        }
+            private readonly string _text;
+            private int _position;
 
-        private void ShowError()
-        {
-            ExpressionText.Text = "";
-            DisplayText.Text = "Error";
-            _firstNumber = 0;
-            _selectedOperator = "";
-            _isNewInput = true;
+            private ExpressionParser(string text)
+            {
+                _text = text;
+            }
+
+            public static double Evaluate(string expression)
+            {
+                ExpressionParser parser = new ExpressionParser(expression);
+                return parser.Parse();
+            }
+
+            private double Parse()
+            {
+                ParsedValue result = ParseExpression();
+
+                SkipSpaces();
+
+                if (_position < _text.Length)
+                    throw new InvalidOperationException("Invalid expression.");
+
+                return ConvertPercentToNumber(result);
+            }
+
+            private ParsedValue ParseExpression()
+            {
+                ParsedValue left = ParseMultiplicationDivision();
+                double leftNumber = ConvertPercentToNumber(left);
+
+                while (true)
+                {
+                    SkipSpaces();
+
+                    if (Match('+'))
+                    {
+                        ParsedValue right = ParseMultiplicationDivision();
+
+                        double rightNumber = right.IsPercent
+                            ? leftNumber * right.Value / 100.0
+                            : ConvertPercentToNumber(right);
+
+                        leftNumber += rightNumber;
+                    }
+                    else if (Match('-'))
+                    {
+                        ParsedValue right = ParseMultiplicationDivision();
+
+                        double rightNumber = right.IsPercent
+                            ? leftNumber * right.Value / 100.0
+                            : ConvertPercentToNumber(right);
+
+                        leftNumber -= rightNumber;
+                    }
+                    else
+                    {
+                        break;
+                    }
+                }
+
+                return new ParsedValue(leftNumber, false);
+            }
+
+            private ParsedValue ParseMultiplicationDivision()
+            {
+                ParsedValue left = ParseUnary();
+
+                while (true)
+                {
+                    SkipSpaces();
+
+                    if (Match('×') || Match('*'))
+                    {
+                        ParsedValue right = ParseUnary();
+
+                        double leftNumber = ConvertPercentToNumber(left);
+                        double rightNumber = ConvertPercentToNumber(right);
+
+                        left = new ParsedValue(leftNumber * rightNumber, false);
+                    }
+                    else if (Match('÷') || Match('/'))
+                    {
+                        ParsedValue right = ParseUnary();
+
+                        double leftNumber = ConvertPercentToNumber(left);
+                        double rightNumber = ConvertPercentToNumber(right);
+
+                        if (rightNumber == 0)
+                            throw new DivideByZeroException();
+
+                        left = new ParsedValue(leftNumber / rightNumber, false);
+                    }
+                    else
+                    {
+                        break;
+                    }
+                }
+
+                return left;
+            }
+
+            private ParsedValue ParseUnary()
+            {
+                SkipSpaces();
+
+                if (Match('+'))
+                    return ParseUnary();
+
+                if (Match('-'))
+                {
+                    ParsedValue value = ParseUnary();
+                    return new ParsedValue(-value.Value, value.IsPercent);
+                }
+
+                return ParsePostfix();
+            }
+
+            private ParsedValue ParsePostfix()
+            {
+                ParsedValue value = ParsePrimary();
+
+                while (true)
+                {
+                    SkipSpaces();
+
+                    if (Match('%'))
+                    {
+                        double numberValue = ConvertPercentToNumber(value);
+                        value = new ParsedValue(numberValue, true);
+                    }
+                    else
+                    {
+                        break;
+                    }
+                }
+
+                return value;
+            }
+
+            private ParsedValue ParsePrimary()
+            {
+                SkipSpaces();
+
+                if (Match('('))
+                {
+                    ParsedValue value = ParseExpression();
+
+                    SkipSpaces();
+
+                    if (!Match(')'))
+                        throw new InvalidOperationException("Missing closing parenthesis.");
+
+                    return new ParsedValue(ConvertPercentToNumber(value), false);
+                }
+
+                return ParseNumber();
+            }
+
+            private ParsedValue ParseNumber()
+            {
+                SkipSpaces();
+
+                int startPosition = _position;
+                bool hasDecimalPoint = false;
+
+                while (_position < _text.Length)
+                {
+                    char current = _text[_position];
+
+                    if (char.IsDigit(current))
+                    {
+                        _position++;
+                    }
+                    else if (current == '.' && !hasDecimalPoint)
+                    {
+                        hasDecimalPoint = true;
+                        _position++;
+                    }
+                    else
+                    {
+                        break;
+                    }
+                }
+
+                if (startPosition == _position)
+                    throw new InvalidOperationException("Number expected.");
+
+                string numberText = _text[startPosition.._position];
+
+                double number = double.Parse(
+                    numberText,
+                    NumberStyles.Float,
+                    CultureInfo.InvariantCulture
+                );
+
+                return new ParsedValue(number, false);
+            }
+
+            private bool Match(char expectedCharacter)
+            {
+                SkipSpaces();
+
+                if (_position >= _text.Length)
+                    return false;
+
+                if (_text[_position] != expectedCharacter)
+                    return false;
+
+                _position++;
+                return true;
+            }
+
+            private void SkipSpaces()
+            {
+                while (_position < _text.Length && char.IsWhiteSpace(_text[_position]))
+                {
+                    _position++;
+                }
+            }
+
+            private static double ConvertPercentToNumber(ParsedValue value)
+            {
+                return value.IsPercent ? value.Value / 100.0 : value.Value;
+            }
+
+            private readonly struct ParsedValue
+            {
+                public double Value { get; }
+                public bool IsPercent { get; }
+
+                public ParsedValue(double value, bool isPercent)
+                {
+                    Value = value;
+                    IsPercent = isPercent;
+                }
+            }
         }
     }
 }
